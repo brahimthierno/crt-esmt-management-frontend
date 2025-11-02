@@ -1,3 +1,6 @@
+
+// VERSION POUR LE RECHARGEMENT DES DONNEES UTILISATEUR APRES MODIFICATION DU PROFIL version 2
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { login as loginService, logout as logoutService, getStoredUser } from '../services/authService';
 
@@ -42,11 +45,51 @@ export const AuthProvider = ({ children }) => {
     setCurrentUser(null);
   };
 
+  // ✅ FONCTION MISE À JOUR : Accepte un objet user OU recharge depuis le serveur
+  const updateCurrentUser = async (updatedUserData = null) => {
+    try {
+      // Si on passe directement les données, les utiliser
+      if (updatedUserData) {
+        console.log('🔄 Mise à jour directe de currentUser:', updatedUserData);
+        setCurrentUser(updatedUserData);
+        localStorage.setItem('currentUser', JSON.stringify(updatedUserData));
+        return { success: true };
+      }
+      
+      // Sinon, recharger depuis le serveur
+      if (!currentUser?._id) {
+        return { success: false, message: 'Aucun utilisateur connecté' };
+      }
+
+      console.log('🔄 Rechargement de currentUser depuis le serveur...');
+      const response = await fetch(`http://localhost:5000/api/users/${currentUser._id}`);
+      
+      if (response.ok) {
+        const freshUser = await response.json();
+        console.log('✅ Données utilisateur rechargées:', freshUser);
+        
+        // Mettre à jour l'état local
+        setCurrentUser(freshUser);
+        // Mettre à jour le localStorage
+        localStorage.setItem('currentUser', JSON.stringify(freshUser));
+        
+        return { success: true };
+      } else {
+        console.error('❌ Erreur HTTP:', response.status);
+        return { success: false, message: 'Erreur lors du rechargement' };
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de la mise à jour:', error);
+      return { success: false, message: error.message };
+    }
+  };
+
   const value = {
     currentUser,
     login,
     logout,
-    loading
+    loading,
+    updateCurrentUser  // ✅ Fonction flexible pour mettre à jour currentUser
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

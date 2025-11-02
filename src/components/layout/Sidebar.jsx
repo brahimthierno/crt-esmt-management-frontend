@@ -1,6 +1,10 @@
+
+// VERSION DE SIDEBAR AVEC INTEGRATION DU PARAMETRE ET RETRAIT PAR LA SUITE ET AUSSI AJOUT DE L'HISTORIQUE DES EMPRUNTS
+
 import React from 'react';
-import { Calendar, Users, Package, Wrench, ClipboardList } from 'lucide-react';
+import { Calendar, Users, Package, Wrench, ClipboardList, FileText } from 'lucide-react';
 import NavItem from './NavItem';
+import { History } from 'lucide-react';
 
 const Sidebar = ({ activeView, setActiveView, currentUser }) => {
   return (
@@ -31,13 +35,32 @@ const Sidebar = ({ activeView, setActiveView, currentUser }) => {
           onClick={() => setActiveView('stock')}
         />
         {currentUser.role === 'admin' && (
-          <NavItem 
-            icon={<Users />} 
-            label="Utilisateurs" 
-            active={activeView === 'users'}
-            onClick={() => setActiveView('users')}
-          />
+          <>
+            <NavItem 
+              icon={<Users />} 
+              label="Utilisateurs" 
+              active={activeView === 'users'}
+              onClick={() => setActiveView('users')}
+            />
+            <NavItem 
+              icon={<FileText />} 
+              label="Demandes" 
+              active={activeView === 'demandes'}
+              onClick={() => setActiveView('demandes')}
+            />
+          </>
         )}
+
+        {
+  (currentUser.role === 'admin' || currentUser.role === 'informaticien' || currentUser.role === 'electricien') && (
+    <NavItem
+      icon={<History size={20} />}
+      label="Historique Emprunts"
+      isActive={activeView === 'historique-emprunts'}
+      onClick={() => setActiveView('historique-emprunts')}
+    />
+  )
+}
       </nav>
     </aside>
   );

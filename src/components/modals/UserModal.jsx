@@ -30,6 +30,8 @@ const UserModal = ({ user, onSave, onClose }) => {
                 onChange={(e) => setFormData({...formData, nom: e.target.value})}
                 className="w-full px-3 py-2 border rounded-lg"
                 required
+                placeholder="Entrez le nom"
+                title="Nom"
               />
             </div>
 
@@ -41,6 +43,8 @@ const UserModal = ({ user, onSave, onClose }) => {
                 onChange={(e) => setFormData({...formData, prenom: e.target.value})}
                 className="w-full px-3 py-2 border rounded-lg"
                 required
+                placeholder="Entrez le prénom"
+                title="Prénom"
               />
             </div>
           </div>
@@ -53,6 +57,8 @@ const UserModal = ({ user, onSave, onClose }) => {
               onChange={(e) => setFormData({...formData, username: e.target.value})}
               className="w-full px-3 py-2 border rounded-lg"
               required
+              placeholder="Entrez le nom d'utilisateur"
+              title="Nom d'utilisateur"
             />
           </div>
 
@@ -74,6 +80,7 @@ const UserModal = ({ user, onSave, onClose }) => {
               value={formData.role}
               onChange={(e) => setFormData({...formData, role: e.target.value})}
               className="w-full px-3 py-2 border rounded-lg"
+              title="Rôle"
             >
               <option value="admin">Administrateur</option>
               <option value="informaticien">Technicien Informaticien</option>
