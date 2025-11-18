@@ -72,6 +72,96 @@
 // NOUVELLE VERSION CLAUDE AVEC INTEGRATION DE LES STATISTIQUES DES INTERVENTIONS
 
 
+// import React from 'react';
+// import { 
+//   Calendar, 
+//   Users, 
+//   Package, 
+//   Wrench, 
+//   ClipboardList, 
+//   FileText, 
+//   History,
+//   BarChart3  // ✅ AJOUT - Icône pour les statistiques
+// } from 'lucide-react';
+// import NavItem from './NavItem';
+
+// const Sidebar = ({ activeView, setActiveView, currentUser }) => {
+//   return (
+//     <aside className="w-64 bg-white rounded-lg shadow-md p-4">
+//       <nav className="space-y-2">
+//         <NavItem 
+//           icon={<ClipboardList />} 
+//           label="Tableau de bord" 
+//           active={activeView === 'dashboard'}
+//           onClick={() => setActiveView('dashboard')}
+//         />
+//         <NavItem 
+//           icon={<Wrench />} 
+//           label="Interventions" 
+//           active={activeView === 'interventions'}
+//           onClick={() => setActiveView('interventions')}
+//         />
+//         <NavItem 
+//           icon={<Calendar />} 
+//           label="Planning" 
+//           active={activeView === 'planning'}
+//           onClick={() => setActiveView('planning')}
+//         />
+//         <NavItem 
+//           icon={<Package />} 
+//           label="Stock" 
+//           active={activeView === 'stock'}
+//           onClick={() => setActiveView('stock')}
+//         />
+        
+//         {/* ✅ NOUVEAU - Lien vers les Statistiques */}
+//         <NavItem 
+//           icon={<BarChart3 />} 
+//           label="Statistiques" 
+//           active={activeView === 'statistiques'}
+//           onClick={() => setActiveView('statistiques')}
+//         />
+
+//         {currentUser.role === 'admin' && (
+//           <>
+//             <NavItem 
+//               icon={<Users />} 
+//               label="Utilisateurs" 
+//               active={activeView === 'users'}
+//               onClick={() => setActiveView('users')}
+//             />
+//             <NavItem 
+//               icon={<FileText />} 
+//               label="Demandes" 
+//               active={activeView === 'demandes'}
+//               onClick={() => setActiveView('demandes')}
+//             />
+//           </>
+//         )}
+
+//         {(currentUser.role === 'admin' || 
+//           currentUser.role === 'informaticien' || 
+//           currentUser.role === 'electricien') && (
+//           <NavItem
+//             icon={<History size={20} />}
+//             label="Historique Emprunts"
+//             active={activeView === 'historique-emprunts'}
+//             onClick={() => setActiveView('historique-emprunts')}
+//           />
+//         )}
+//       </nav>
+//     </aside>
+//   );
+// };
+
+// export default Sidebar;
+
+
+
+// NOUVELLE VERSION DEEPSEEK POUR LE MODE SOMBRE
+
+
+
 import React from 'react';
 import { 
   Calendar, 
@@ -81,42 +171,41 @@ import {
   ClipboardList, 
   FileText, 
   History,
-  BarChart3  // ✅ AJOUT - Icône pour les statistiques
+  BarChart3
 } from 'lucide-react';
 import NavItem from './NavItem';
 
 const Sidebar = ({ activeView, setActiveView, currentUser }) => {
   return (
-    <aside className="w-64 bg-white rounded-lg shadow-md p-4">
+    <aside className="w-64 bg-white dark:bg-gray-800 rounded-lg shadow-md border border-gray-100 dark:border-gray-700 p-4 transition-colors duration-300">
       <nav className="space-y-2">
         <NavItem 
-          icon={<ClipboardList />} 
+          icon={<ClipboardList className="w-5 h-5" />} 
           label="Tableau de bord" 
           active={activeView === 'dashboard'}
           onClick={() => setActiveView('dashboard')}
         />
         <NavItem 
-          icon={<Wrench />} 
+          icon={<Wrench className="w-5 h-5" />} 
           label="Interventions" 
           active={activeView === 'interventions'}
           onClick={() => setActiveView('interventions')}
         />
         <NavItem 
-          icon={<Calendar />} 
+          icon={<Calendar className="w-5 h-5" />} 
           label="Planning" 
           active={activeView === 'planning'}
           onClick={() => setActiveView('planning')}
         />
         <NavItem 
-          icon={<Package />} 
+          icon={<Package className="w-5 h-5" />} 
           label="Stock" 
           active={activeView === 'stock'}
           onClick={() => setActiveView('stock')}
         />
         
-        {/* ✅ NOUVEAU - Lien vers les Statistiques */}
         <NavItem 
-          icon={<BarChart3 />} 
+          icon={<BarChart3 className="w-5 h-5" />} 
           label="Statistiques" 
           active={activeView === 'statistiques'}
           onClick={() => setActiveView('statistiques')}
@@ -125,13 +214,13 @@ const Sidebar = ({ activeView, setActiveView, currentUser }) => {
         {currentUser.role === 'admin' && (
           <>
             <NavItem 
-              icon={<Users />} 
+              icon={<Users className="w-5 h-5" />} 
               label="Utilisateurs" 
               active={activeView === 'users'}
               onClick={() => setActiveView('users')}
             />
             <NavItem 
-              icon={<FileText />} 
+              icon={<FileText className="w-5 h-5" />} 
               label="Demandes" 
               active={activeView === 'demandes'}
               onClick={() => setActiveView('demandes')}
@@ -143,7 +232,7 @@ const Sidebar = ({ activeView, setActiveView, currentUser }) => {
           currentUser.role === 'informaticien' || 
           currentUser.role === 'electricien') && (
           <NavItem
-            icon={<History size={20} />}
+            icon={<History className="w-5 h-5" />}
             label="Historique Emprunts"
             active={activeView === 'historique-emprunts'}
             onClick={() => setActiveView('historique-emprunts')}
