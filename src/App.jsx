@@ -4161,7 +4161,7 @@ const App = () => {
                     setActiveView={setActiveView}
                     onProfileUpdate={async () => {
                       // Recharger uniquement les données nécessaires
-                      await reloadData(['interventions', 'stock', 'emprunts']);
+                      await reloadData(['interventions', 'stock', 'emprunts', 'users']);
                     }}
                   />
                 )}

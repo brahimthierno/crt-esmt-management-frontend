@@ -64,7 +64,6 @@ const api = axios.create({
   }
 });
 
-// ... le reste de votre code reste identique ...
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
