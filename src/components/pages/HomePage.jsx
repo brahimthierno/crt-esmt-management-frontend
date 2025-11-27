@@ -569,15 +569,28 @@ const HomePage = () => {
         {/* Header */}
         <header className="bg-white shadow-sm">
           <div className="max-w-6xl mx-auto px-4 py-6 flex justify-between items-center">
-            <div className="flex items-center gap-3">
-              <div className="bg-blue-600 p-3 rounded-lg">
-                <Wrench className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800">CRT-ESMT</h1>
-                <p className="text-sm text-gray-600">Centre des Ressources Techniques</p>
-              </div>
-            </div>
+            {/* Logo circulaire - VERSION OPTIMISÉE */}
+<div className="flex items-center gap-3">
+  <div className="relative group">
+    <div className="w-12 h-12 rounded-full bg-white dark:bg-dark-700 border-2 border-blue-300 dark:border-blue-600 shadow-lg group-hover:shadow-xl transition-all duration-300 flex items-center justify-center overflow-hidden p-1.5">
+      <img 
+        src="/images/logo-crt.png" 
+        alt="Logo CRT-ESMT"
+        className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-110 filter brightness-95 dark:brightness-125"
+      />
+    </div>
+    {/* Effet de halo au survol */}
+    <div className="absolute inset-0 rounded-full bg-blue-200 dark:bg-blue-800 opacity-0 group-hover:opacity-20 blur-sm transition-opacity duration-300 -z-10"></div>
+  </div>
+  <div>
+    <h1 className="text-2xl font-bold text-gray-800 dark:text-white transition-colors duration-200">
+      CRT-ESMT
+    </h1>
+    <p className="text-xs text-gray-500 dark:text-gray-400 transition-colors duration-200">
+      Centre des Ressources Techniques
+    </p>
+  </div>
+</div>
             <button
               onClick={() => navigate('/login')}
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition"
