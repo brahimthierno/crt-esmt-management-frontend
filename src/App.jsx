@@ -4209,8 +4209,8 @@ import * as interventionService from './services/interventionService';
 import * as userService from './services/userService';
 import * as stockService from './services/stockService';
 import * as empruntService from './services/empruntService';
-import * as empruntService from './services/demandeService';
-import * as empruntService from './services/statsService';
+// import * as demandeService from './services/demandeService';
+// import * as statsService from './services/statsService';
 
 
 const App = () => {
