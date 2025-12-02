@@ -62,11 +62,13 @@
 // NOUVELLE VERSION AVEC L'EXPORT EN PDF
 
 
-import axios from 'axios';
+// import axios from 'axios'; 
+import api from './api';
+
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 
-const API_URL = 'http://localhost:5000/api/interventions/stats';
+// const API_URL = 'http://localhost:5000/api/interventions/stats';
 
 // Récupérer le token depuis le localStorage
 const getAuthHeader = () => {
@@ -81,7 +83,7 @@ const getAuthHeader = () => {
 // Obtenir les statistiques détaillées de durée
 export const getStatsDureeDetaillees = async () => {
   try {
-    const response = await axios.get(`${API_URL}/duree-detaillees`, getAuthHeader());
+    const response = await api.get('/duree-detaillees', getAuthHeader());
     return response.data;
   } catch (error) {
     console.error('Erreur lors de la récupération des stats:', error);
@@ -92,7 +94,7 @@ export const getStatsDureeDetaillees = async () => {
 // Obtenir l'évolution des durées dans le temps
 export const getEvolutionDurees = async (periode = 30) => {
   try {
-    const response = await axios.get(`${API_URL}/evolution-durees?periode=${periode}`, getAuthHeader());
+    const response = await api.get('/evolution-durees?periode=${periode}', getAuthHeader());
     return response.data;
   } catch (error) {
     console.error('Erreur lors de la récupération de l\'évolution:', error);
@@ -103,7 +105,7 @@ export const getEvolutionDurees = async (periode = 30) => {
 // Exporter les données en CSV
 export const exportCSV = async () => {
   try {
-    const response = await axios.get(`${API_URL}/export`, {
+    const response = await api.get('/export', {
       ...getAuthHeader(),
       responseType: 'blob'
     });
