@@ -4748,6 +4748,705 @@
 
 
 
+// import React, { useState, useEffect, useRef } from 'react';
+// import { useAuth } from './context/AuthContext';
+// import { NotificationProvider } from './context/NotificationContext';
+// import { ThemeProvider } from './context/ThemeContext';
+// import { UserProvider } from './context/UserContext';
+// import Header from './components/layout/Header';
+// import Sidebar from './components/layout/Sidebar';
+// import Dashboard from './components/views/Dashboard';
+// import InterventionsView from './components/views/InterventionsView';
+// import PlanningView from './components/views/PlanningView';
+// import StockView from './components/views/StockView';
+// import UsersView from './components/views/UsersView';
+// import DemandesView from './components/views/DemandesView';
+// import SettingsView from './components/views/SettingsView';
+// import ProfileView from './components/views/ProfileView';
+// import NotificationContainer from './components/NotificationContainer';
+// import HistoriqueEmpruntsView from './components/views/HistoriqueEmpruntsView';
+// import StatistiquesView from './components/views/StatistiquesView';
+
+// // Importation des services
+// import * as interventionService from './services/interventionService';
+// import * as userService from './services/userService';
+// import * as stockService from './services/stockService';
+// import * as empruntService from './services/empruntService';
+// import * as demandeService from './services/demandeService';
+// import * as statsService from './services/statsService';
+// import api from './services/api';
+
+// const App = () => {
+//   const { currentUser, logout, updateCurrentUser } = useAuth();
+  
+//   const [interventions, setInterventions] = useState([]);
+//   const [users, setUsers] = useState([]);
+//   const [stock, setStock] = useState([]);
+//   const [emprunts, setEmprunts] = useState([]);
+//   const [demandes, setDemandes] = useState([]);
+//   const [statistiques, setStatistiques] = useState({});
+  
+//   const [activeView, setActiveView] = useState('dashboard');
+//   const [filterDate, setFilterDate] = useState('');
+//   const [filterStatut, setFilterStatut] = useState('');
+  
+//   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState(null);
+
+//   // ✅ État pour contrôler l'affichage du menu utilisateur
+//   const [showUserMenu, setShowUserMenu] = useState(false);
+
+//   // ✅ Utiliser useRef pour éviter la boucle infinie
+//   const hasLoadedData = useRef(false);
+
+//   // ✅ État pour suivre les modifications de fichiers
+//   const [fileUpdates, setFileUpdates] = useState(0);
+
+//   // Fonction pour récupérer le token
+//   const getAuthToken = () => {
+//     return localStorage.getItem('authToken') || localStorage.getItem('token');
+//   };
+
+//   // Charger les données au montage du composant UNIQUEMENT
+//   useEffect(() => {
+//     if (currentUser && !hasLoadedData.current) {
+//       hasLoadedData.current = true;
+//       loadAllData();
+//     }
+//   }, [currentUser]);
+
+//   const loadAllData = async () => {
+//     setLoading(true);
+//     setError(null);
+//     try {
+//       console.log('🔄 Début du chargement des données...');
+//       console.log('Environnement:', process.env.NODE_ENV);
+//       console.log('API URL:', process.env.REACT_APP_API_URL);
+      
+//       const token = getAuthToken();
+//       if (!token) {
+//         console.warn('⚠️ Token non trouvé dans le localStorage');
+//         setError('Erreur d\'authentification. Veuillez vous reconnecter.');
+//         hasLoadedData.current = false;
+//         return;
+//       }
+      
+//       // 1️⃣ Charger les informations de l'utilisateur actuel via l'instance API configurée
+//       try {
+//         console.log('🔍 Chargement des infos utilisateur...');
+//         const userResponse = await api.get('/auth/me');
+        
+//         if (userResponse.data.success && userResponse.data.data) {
+//           console.log('✅ Données utilisateur vérifiées:', userResponse.data.data);
+//           updateCurrentUser(userResponse.data.data);
+//         } else {
+//           console.warn('⚠️ Réponse utilisateur invalide:', userResponse.data);
+//         }
+//       } catch (err) {
+//         console.warn('⚠️ Erreur lors du chargement des données utilisateur:', err.message);
+//         // Continue avec l'utilisateur actuel du localStorage
+//       }
+
+//       // 2️⃣ Charger les autres données avec gestion d'erreur individuelle
+//       console.log('📥 Chargement des données principales...');
+      
+//       const dataPromises = [
+//         // Interventions
+//         interventionService.getInterventions().then(res => {
+//           console.log('✅ Interventions chargées:', res?.length || 0);
+//           return res || [];
+//         }).catch(err => {
+//           console.error('❌ Erreur interventions:', err.message);
+//           return [];
+//         }),
+        
+//         // Utilisateurs (admin seulement)
+//         currentUser?.role === 'admin' 
+//           ? userService.getUsers().then(res => {
+//               console.log('✅ Utilisateurs chargés:', res?.length || 0);
+//               return res || [];
+//             }).catch(err => {
+//               console.error('❌ Erreur users:', err.message);
+//               return [];
+//             })
+//           : Promise.resolve([]),
+        
+//         // Stock
+//         stockService.getStock().then(res => {
+//           console.log('✅ Stock chargé:', res?.length || 0);
+//           return res || [];
+//         }).catch(err => {
+//           console.error('❌ Erreur stock:', err.message);
+//           return [];
+//         }),
+        
+//         // Emprunts
+//         empruntService.getEmprunts().then(res => {
+//           console.log('✅ Emprunts chargés:', res?.length || 0);
+//           return res || [];
+//         }).catch(err => {
+//           console.error('❌ Erreur emprunts:', err.message);
+//           return [];
+//         }),
+        
+//         // Demandes (admin seulement) - Adapté à la structure de ton service
+//         currentUser?.role === 'admin'
+//           ? demandeService.getDemandes().then(res => {
+//               console.log('✅ Demandes chargées');
+//               // Adapte selon la structure de réponse
+//               if (res && res.data) {
+//                 return res.data; // Si la réponse est {success: true, data: [...]}
+//               } else if (Array.isArray(res)) {
+//                 return res; // Si la réponse est directement un tableau
+//               }
+//               return [];
+//             }).catch(err => {
+//               console.error('❌ Erreur demandes:', err.message);
+//               return [];
+//             })
+//           : Promise.resolve([]),
+        
+//         // Statistiques
+//         // Placeholder - tu peux ajouter un appel à statsService si tu as une route pour les stats globales
+//         Promise.resolve({ lastUpdated: new Date() })
+//           .then(data => {
+//             console.log('✅ Statistiques placeholder chargé');
+//             return data;
+//           })
+//           .catch(err => {
+//             console.error('❌ Erreur statistiques:', err.message);
+//             return {};
+//           })
+//       ];
+
+//       const [
+//         interventionsData, 
+//         usersData, 
+//         stockData, 
+//         empruntsData, 
+//         demandesData, 
+//         statsData
+//       ] = await Promise.all(dataPromises);
+
+//       // 3️⃣ Mettre à jour les états
+//       console.log('📊 Mise à jour des états...');
+//       console.log('- Interventions:', interventionsData?.length || 0);
+//       console.log('- Utilisateurs:', usersData?.length || 0);
+//       console.log('- Stock:', stockData?.length || 0);
+//       console.log('- Emprunts:', empruntsData?.length || 0);
+//       console.log('- Demandes:', demandesData?.length || 0);
+
+//       setInterventions(interventionsData);
+//       setUsers(usersData);
+//       setStock(stockData);
+//       setEmprunts(empruntsData);
+//       setDemandes(demandesData || []);
+//       setStatistiques(statsData || {});
+      
+//       console.log('✅ Toutes les données chargées avec succès');
+//     } catch (err) {
+//       console.error('❌ Erreur globale dans loadAllData:', err);
+//       setError(err.response?.data?.message || err.message || 'Erreur lors du chargement des données');
+//       hasLoadedData.current = false;
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   // Gestion des interventions
+//   const addIntervention = async (intervention) => {
+//     try {
+//       const newIntervention = await interventionService.createIntervention(intervention);
+//       setInterventions([...interventions, newIntervention]);
+//       return { success: true };
+//     } catch (err) {
+//       return { 
+//         success: false, 
+//         message: err.response?.data?.message || 'Erreur lors de la création' 
+//       };
+//     }
+//   };
+
+//   const updateIntervention = async (id, updatedData) => {
+//     try {
+//       const updated = await interventionService.updateIntervention(id, updatedData);
+//       setInterventions(interventions.map(i => i._id === id ? updated : i));
+//       return { success: true };
+//     } catch (err) {
+//       return { 
+//         success: false, 
+//         message: err.response?.data?.message || 'Erreur lors de la mise à jour' 
+//       };
+//     }
+//   };
+
+//   const deleteIntervention = async (id) => {
+//     if (window.confirm('Êtes-vous sûr de vouloir supprimer cette intervention ?')) {
+//       try {
+//         await interventionService.deleteIntervention(id);
+//         setInterventions(interventions.filter(i => i._id !== id));
+//         return { success: true };
+//       } catch (err) {
+//         return { 
+//           success: false, 
+//           message: err.response?.data?.message || 'Erreur lors de la suppression' 
+//         };
+//       }
+//     }
+//   };
+
+//   const validerIntervention = async (interventionId) => {
+//     try {
+//       console.log('🔄 Validation intervention ID:', interventionId);
+//       const response = await interventionService.validerIntervention(interventionId);
+//       setInterventions(interventions.map(i => 
+//         i._id === interventionId ? response : i
+//       ));
+//       return { success: true, data: response };
+//     } catch (err) {
+//       console.error('❌ Erreur validation intervention:', err);
+//       return { 
+//         success: false, 
+//         message: err.response?.data?.message || 'Erreur lors de la validation' 
+//       };
+//     }
+//   };
+
+//   // Gestion du stock
+//   const updateStock = async (id, quantity) => {
+//     try {
+//       const updated = await stockService.updateMateriel(id, { quantite: quantity });
+//       setStock(stock.map(s => s._id === id ? updated : s));
+//       return { success: true };
+//     } catch (err) {
+//       return { 
+//         success: false, 
+//         message: err.response?.data?.message || 'Erreur lors de la mise à jour' 
+//       };
+//     }
+//   };
+
+//   const addMateriel = async (materielData) => {
+//     try {
+//       const newMateriel = await stockService.createMateriel(materielData);
+//       setStock([...stock, newMateriel]);
+//       return { success: true };
+//     } catch (err) {
+//       return { 
+//         success: false, 
+//         message: err.response?.data?.message || 'Erreur lors de l\'ajout du matériel' 
+//       };
+//     }
+//   };
+
+//   const updateMateriel = async (id, updatedData) => {
+//     try {
+//       const updated = await stockService.updateMateriel(id, updatedData);
+//       setStock(stock.map(s => s._id === id ? updated : s));
+//       return { success: true };
+//     } catch (err) {
+//       return { 
+//         success: false, 
+//         message: err.response?.data?.message || 'Erreur lors de la mise à jour du matériel' 
+//       };
+//     }
+//   };
+
+//   const deleteMateriel = async (id) => {
+//     try {
+//       await stockService.deleteMateriel(id);
+//       setStock(stock.filter(s => s._id !== id));
+//       return { success: true };
+//     } catch (err) {
+//       return { 
+//         success: false, 
+//         message: err.response?.data?.message || 'Erreur lors de la suppression du matériel' 
+//       };
+//     }
+//   };
+
+//   // Gestion des emprunts
+//   const addEmprunt = async (emprunt) => {
+//     try {
+//       const newEmprunt = await empruntService.createEmprunt(emprunt);
+//       setEmprunts([...emprunts, newEmprunt]);
+      
+//       const [stockData, empruntsData] = await Promise.all([
+//         stockService.getStock(),
+//         empruntService.getEmprunts()
+//       ]);
+//       setStock(stockData);
+//       setEmprunts(empruntsData);
+      
+//       return { success: true };
+//     } catch (err) {
+//       return { 
+//         success: false, 
+//         message: err.response?.data?.message || 'Erreur lors de la création de l\'emprunt' 
+//       };
+//     }
+//   };
+
+//   const retournerEmprunt = async (empruntId) => {
+//     try {
+//       const updated = await empruntService.retournerEmprunt(empruntId);
+//       setEmprunts(emprunts.map(e => e._id === empruntId ? updated : e));
+      
+//       const [stockData, empruntsData] = await Promise.all([
+//         stockService.getStock(),
+//         empruntService.getEmprunts()
+//       ]);
+//       setStock(stockData);
+//       setEmprunts(empruntsData);
+      
+//       return { success: true };
+//     } catch (err) {
+//       return { 
+//         success: false, 
+//         message: err.response?.data?.message || 'Erreur lors du retour' 
+//       };
+//     }
+//   };
+
+//   const updateEmprunt = async (empruntId, updatedData) => {
+//     try {
+//       const updated = await empruntService.updateEmprunt(empruntId, updatedData);
+//       setEmprunts(emprunts.map(e => e._id === empruntId ? updated : e));
+      
+//       const [stockData, empruntsData] = await Promise.all([
+//         stockService.getStock(),
+//         empruntService.getEmprunts()
+//       ]);
+//       setStock(stockData);
+//       setEmprunts(empruntsData);
+      
+//       return { success: true };
+//     } catch (err) {
+//       return { 
+//         success: false, 
+//         message: err.response?.data?.message || 'Erreur lors de la modification de l\'emprunt' 
+//       };
+//     }
+//   };
+
+//   // 🔄 FONCTION POUR RECHARGER LES DONNÉES SPÉCIFIQUES
+//   const reloadData = async (dataTypes = ['all']) => {
+//     try {
+//       console.log('🔄 Rechargement des données:', dataTypes);
+      
+//       const promises = [];
+      
+//       if (dataTypes.includes('all') || dataTypes.includes('interventions')) {
+//         promises.push(
+//           interventionService.getInterventions()
+//             .then(data => setInterventions(data || []))
+//             .catch(err => console.error('❌ Erreur rechargement interventions:', err))
+//         );
+//       }
+      
+//       if (dataTypes.includes('all') || dataTypes.includes('stock')) {
+//         promises.push(
+//           stockService.getStock()
+//             .then(data => setStock(data || []))
+//             .catch(err => console.error('❌ Erreur rechargement stock:', err))
+//         );
+//       }
+      
+//       if (dataTypes.includes('all') || dataTypes.includes('emprunts')) {
+//         promises.push(
+//           empruntService.getEmprunts()
+//             .then(data => setEmprunts(data || []))
+//             .catch(err => console.error('❌ Erreur rechargement emprunts:', err))
+//         );
+//       }
+      
+//       if (dataTypes.includes('all') || dataTypes.includes('users') && currentUser?.role === 'admin') {
+//         promises.push(
+//           userService.getUsers()
+//             .then(data => setUsers(data || []))
+//             .catch(err => console.error('❌ Erreur rechargement users:', err))
+//         );
+//       }
+      
+//       // ✅ AJOUT: Rechargement des demandes
+//       if (dataTypes.includes('all') || dataTypes.includes('demandes') && currentUser?.role === 'admin') {
+//         promises.push(
+//           demandeService.getDemandes()
+//             .then(res => {
+//               const data = res?.data || res || [];
+//               setDemandes(data);
+//               return data;
+//             })
+//             .catch(err => console.error('❌ Erreur rechargement demandes:', err))
+//         );
+//       }
+      
+//       // ✅ AJOUT: Rechargement des statistiques
+//       if (dataTypes.includes('all') || dataTypes.includes('statistiques')) {
+//         promises.push(
+//           Promise.resolve()
+//             .then(() => {
+//               // Mettre à jour les stats avec les données actuelles
+//               const updatedStats = {
+//                 ...statistiques,
+//                 lastUpdated: new Date(),
+//                 interventionsCount: interventions.length,
+//                 empruntsCount: emprunts.length,
+//                 stockCount: stock.length
+//               };
+//               setStatistiques(updatedStats);
+//               return updatedStats;
+//             })
+//             .catch(err => console.error('❌ Erreur rechargement stats:', err))
+//         );
+//       }
+      
+//       await Promise.all(promises);
+//       console.log('✅ Données rechargées avec succès');
+      
+//     } catch (err) {
+//       console.error('❌ Erreur lors du rechargement des données:', err);
+//     }
+//   };
+
+//   const reloadIntervention = async (interventionId) => {
+//     try {
+//       const updatedIntervention = await interventionService.getIntervention(interventionId);
+//       setInterventions(interventions.map(i => 
+//         i._id === interventionId ? updatedIntervention : i
+//       ));
+//       setFileUpdates(prev => prev + 1);
+//       return { success: true };
+//     } catch (err) {
+//       console.error('❌ Erreur rechargement intervention:', err);
+//       return { success: false };
+//     }
+//   };
+
+//   const handleFileUploaded = async (interventionId) => {
+//     try {
+//       if (reloadIntervention) {
+//         await reloadIntervention(interventionId);
+//       }
+//     } catch (err) {
+//       console.error('❌ Erreur lors du rechargement après opération sur fichiers:', err);
+//     }
+//   };
+
+//   // ✅ FONCTION : Afficher le menu utilisateur
+//   const handleShowUserMenu = () => {
+//     console.log('🔄 Affichage du menu utilisateur depuis App');
+//     setShowUserMenu(true);
+//   };
+
+//   // Fonction pour exporter en PDF
+//   const handleExportPDF = async () => {
+//     try {
+//       console.log('📄 Export PDF en cours...');
+//       // Préparer les données pour l'export
+//       const statsData = {
+//         statistiquesGlobales: {
+//           total: interventions.length,
+//           moyenneGlobale: { formattee: 'N/A' },
+//           dureeMin: { heures: 0, minutes: 0 },
+//           dureeMax: { heures: 0, minutes: 0 }
+//         },
+//         statistiquesParType: [] // Tu peux remplir ça avec tes données réelles
+//       };
+      
+//       await statsService.exportPDF(statsData, currentUser);
+//       console.log('✅ Export PDF terminé');
+//     } catch (error) {
+//       console.error('❌ Erreur lors de l\'export PDF:', error);
+//     }
+//   };
+
+//   if (loading) {
+//     return (
+//       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-900 transition-colors duration-200">
+//         <div className="text-center">
+//           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+//           <div className="text-xl dark:text-white">Chargement des données...</div>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   if (error) {
+//     return (
+//       <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-dark-900 transition-colors duration-200">
+//         <div className="text-center max-w-md">
+//           <div className="text-6xl mb-4">⚠️</div>
+//           <div className="text-xl text-red-600 dark:text-red-400 mb-4">Erreur: {error}</div>
+//           <div className="flex gap-4 justify-center">
+//             <button 
+//               onClick={() => {
+//                 hasLoadedData.current = false;
+//                 loadAllData();
+//               }} 
+//               className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg transition-colors duration-200"
+//             >
+//               Réessayer
+//             </button>
+//             <button 
+//               onClick={() => {
+//                 hasLoadedData.current = false;
+//                 window.location.reload();
+//               }} 
+//               className="bg-gray-500 hover:bg-gray-600 text-white px-6 py-2 rounded-lg transition-colors duration-200"
+//             >
+//               Actualiser
+//             </button>
+//           </div>
+//         </div>
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <ThemeProvider>
+//       <UserProvider initialUser={currentUser} onLogout={logout}>
+//         <NotificationProvider>
+//           <div className="min-h-screen bg-gray-50 dark:bg-dark-900 transition-colors duration-200">
+//             <Header 
+//               setActiveView={setActiveView}
+//               showUserMenu={showUserMenu}
+//               setShowUserMenu={setShowUserMenu}
+//             />
+
+//             <div className="container mx-auto px-4 py-6 flex gap-6">
+//               <Sidebar 
+//                 activeView={activeView} 
+//                 setActiveView={setActiveView}
+//                 currentUser={currentUser}
+//               />
+
+//               <main className="flex-1">
+//                 {activeView === 'dashboard' && (
+//                   <Dashboard 
+//                     currentUser={currentUser}
+//                     interventions={interventions}
+//                     stock={stock}
+//                     emprunts={emprunts}
+//                     demandes={demandes}
+//                     onReloadData={reloadData}
+//                   />
+//                 )}
+
+//                 {activeView === 'historique-emprunts' && (
+//                   <HistoriqueEmpruntsView
+//                     emprunts={emprunts}
+//                     stock={stock}
+//                     currentUser={currentUser}
+//                   />
+//                 )}
+                
+//                 {activeView === 'interventions' && (
+//                   <InterventionsView
+//                     currentUser={currentUser}
+//                     interventions={interventions}
+//                     users={users}
+//                     onAdd={addIntervention}
+//                     onUpdate={updateIntervention}
+//                     onDelete={deleteIntervention}
+//                     onValider={validerIntervention}
+//                     filterDate={filterDate}
+//                     setFilterDate={setFilterDate}
+//                     filterStatut={filterStatut}
+//                     setFilterStatut={setFilterStatut}
+//                     onReloadIntervention={reloadIntervention}
+//                     onFileUploaded={handleFileUploaded}
+//                     fileUpdates={fileUpdates}
+//                   />
+//                 )}
+                
+//                 {activeView === 'planning' && (
+//                   <PlanningView
+//                     interventions={interventions}
+//                     users={users}
+//                     currentUser={currentUser}
+//                   />
+//                 )}
+                
+//                 {activeView === 'stock' && (
+//                   <StockView
+//                     stock={stock}
+//                     emprunts={emprunts}
+//                     onUpdateStock={updateMateriel}
+//                     onAddEmprunt={addEmprunt}
+//                     onRetourner={retournerEmprunt}
+//                     onUpdateEmprunt={updateEmprunt}
+//                     onDeleteMateriel={deleteMateriel}
+//                     onAddMateriel={addMateriel}
+//                     currentUser={currentUser}
+//                     onReloadData={reloadData}
+//                   />
+//                 )}
+                
+//                 {activeView === 'users' && currentUser?.role === 'admin' && (
+//                   <UsersView
+//                     users={users}
+//                     setUsers={setUsers}
+//                     onReloadData={reloadData}
+//                   />
+//                 )}
+
+//                 {activeView === 'demandes' && currentUser?.role === 'admin' && (
+//                   <DemandesView 
+//                     demandes={demandes}
+//                     setDemandes={setDemandes}
+//                     currentUser={currentUser}
+//                     onReloadData={() => reloadData(['demandes'])}
+//                   />
+//                 )}
+
+//                 {activeView === 'statistiques' && (
+//                   <StatistiquesView 
+//                     currentUser={currentUser}
+//                     statistiques={statistiques}
+//                     interventions={interventions}
+//                     emprunts={emprunts}
+//                     stock={stock}
+//                     demandes={demandes}
+//                     onExportPDF={handleExportPDF}
+//                   />
+//                 )}
+
+//                 {activeView === 'settings' && (
+//                   <SettingsView 
+//                     currentUser={currentUser} 
+//                     onLogout={logout}
+//                   />
+//                 )}
+
+//                 {activeView === 'profile' && (
+//                   <ProfileView 
+//                     setActiveView={setActiveView}
+//                     onProfileUpdate={async () => {
+//                       await reloadData(['interventions', 'stock', 'emprunts', 'users']);
+//                     }}
+//                     onShowUserMenu={handleShowUserMenu}
+//                   />
+//                 )}
+//               </main>
+//             </div>
+
+//             <NotificationContainer />
+//           </div>
+//         </NotificationProvider>
+//       </UserProvider>
+//     </ThemeProvider>
+//   );
+// };
+
+// export default App;
+
+
+
+// NOUVELLE VERSION POUR REGLER LE PROBLEME AVEC LE DEPLOIEMENT POUR DEMANDES ET STATS
+
+
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
@@ -4889,7 +5588,7 @@ const App = () => {
           return [];
         }),
         
-        // Demandes (admin seulement) - Adapté à la structure de ton service
+        // Demandes (admin seulement)
         currentUser?.role === 'admin'
           ? demandeService.getDemandes().then(res => {
               console.log('✅ Demandes chargées');
@@ -4907,16 +5606,13 @@ const App = () => {
           : Promise.resolve([]),
         
         // Statistiques
-        // Placeholder - tu peux ajouter un appel à statsService si tu as une route pour les stats globales
-        Promise.resolve({ lastUpdated: new Date() })
-          .then(data => {
-            console.log('✅ Statistiques placeholder chargé');
-            return data;
-          })
-          .catch(err => {
-            console.error('❌ Erreur statistiques:', err.message);
-            return {};
-          })
+        statsService.getAllStats().then(res => {
+          console.log('✅ Statistiques chargées');
+          return res || {};
+        }).catch(err => {
+          console.error('❌ Erreur statistiques:', err.message);
+          return {};
+        })
       ];
 
       const [
@@ -4935,6 +5631,7 @@ const App = () => {
       console.log('- Stock:', stockData?.length || 0);
       console.log('- Emprunts:', empruntsData?.length || 0);
       console.log('- Demandes:', demandesData?.length || 0);
+      console.log('- Statistiques chargées:', Object.keys(statsData).length > 0 ? 'Oui' : 'Non');
 
       setInterventions(interventionsData);
       setUsers(usersData);
@@ -5168,7 +5865,7 @@ const App = () => {
         );
       }
       
-      // ✅ AJOUT: Rechargement des demandes
+      // Rechargement des demandes
       if (dataTypes.includes('all') || dataTypes.includes('demandes') && currentUser?.role === 'admin') {
         promises.push(
           demandeService.getDemandes()
@@ -5181,21 +5878,13 @@ const App = () => {
         );
       }
       
-      // ✅ AJOUT: Rechargement des statistiques
+      // Rechargement des statistiques
       if (dataTypes.includes('all') || dataTypes.includes('statistiques')) {
         promises.push(
-          Promise.resolve()
-            .then(() => {
-              // Mettre à jour les stats avec les données actuelles
-              const updatedStats = {
-                ...statistiques,
-                lastUpdated: new Date(),
-                interventionsCount: interventions.length,
-                empruntsCount: emprunts.length,
-                stockCount: stock.length
-              };
-              setStatistiques(updatedStats);
-              return updatedStats;
+          statsService.getAllStats()
+            .then(data => {
+              setStatistiques(data || {});
+              return data;
             })
             .catch(err => console.error('❌ Erreur rechargement stats:', err))
         );
@@ -5237,28 +5926,6 @@ const App = () => {
   const handleShowUserMenu = () => {
     console.log('🔄 Affichage du menu utilisateur depuis App');
     setShowUserMenu(true);
-  };
-
-  // Fonction pour exporter en PDF
-  const handleExportPDF = async () => {
-    try {
-      console.log('📄 Export PDF en cours...');
-      // Préparer les données pour l'export
-      const statsData = {
-        statistiquesGlobales: {
-          total: interventions.length,
-          moyenneGlobale: { formattee: 'N/A' },
-          dureeMin: { heures: 0, minutes: 0 },
-          dureeMax: { heures: 0, minutes: 0 }
-        },
-        statistiquesParType: [] // Tu peux remplir ça avec tes données réelles
-      };
-      
-      await statsService.exportPDF(statsData, currentUser);
-      console.log('✅ Export PDF terminé');
-    } catch (error) {
-      console.error('❌ Erreur lors de l\'export PDF:', error);
-    }
   };
 
   if (loading) {
@@ -5329,6 +5996,7 @@ const App = () => {
                     stock={stock}
                     emprunts={emprunts}
                     demandes={demandes}
+                    statistiques={statistiques}
                     onReloadData={reloadData}
                   />
                 )}
@@ -5403,12 +6071,8 @@ const App = () => {
                 {activeView === 'statistiques' && (
                   <StatistiquesView 
                     currentUser={currentUser}
-                    statistiques={statistiques}
-                    interventions={interventions}
-                    emprunts={emprunts}
-                    stock={stock}
-                    demandes={demandes}
-                    onExportPDF={handleExportPDF}
+                    statistiques={statistiques.detaillees} // Passer directement les stats détaillées
+                    onExportPDF={() => statsService.exportPDF(statistiques.detaillees, currentUser)}
                   />
                 )}
 
