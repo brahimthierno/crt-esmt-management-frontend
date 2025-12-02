@@ -84,7 +84,7 @@ const getAuthHeader = () => {
 export const getStatsDureeDetaillees = async () => {
   try {
     const response = await api.get('/duree-detaillees', getAuthHeader());
-    return response.data;
+    return response.data.data;
   } catch (error) {
     console.error('Erreur lors de la récupération des stats:', error);
     throw error;
@@ -95,7 +95,7 @@ export const getStatsDureeDetaillees = async () => {
 export const getEvolutionDurees = async (periode = 30) => {
   try {
     const response = await api.get('/evolution-durees?periode=${periode}', getAuthHeader());
-    return response.data;
+    return response.data.data;
   } catch (error) {
     console.error('Erreur lors de la récupération de l\'évolution:', error);
     throw error;
