@@ -11402,10 +11402,12 @@ import {
   ChevronDown,
   ChevronUp,
   CheckCircle,
-  Paperclip
+  Paperclip,
+  MessageSquare
 } from 'lucide-react';
 import InterventionModal from '../modals/InterventionModal';
 import FileUploadModal from '../modals/FileUploadModal';
+import CommentsModal from '../modals/CommentsModal';
 
 // Fonction helper pour formater la durée
 const formatDuree = (dateDebut, dateFin) => {
@@ -11428,15 +11430,18 @@ const InterventionsView = ({
   onAdd, 
   onUpdate, 
   onDelete,
-  onValider, // ✅ NOUVELLE PROP
+  onValider,
   filterDate,
   setFilterDate,
   filterStatut,
   setFilterStatut,
   onReloadIntervention,
-  // ✅ NOUVELLES PROPS POUR LA GESTION DES FICHIERS
   onFileUploaded,
-  fileUpdates
+  fileUpdates,
+  // ✅ NOUVEAU : Props pour les commentaires
+  onAddComment,
+  onDeleteComment,
+  onUpdateComment
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState(null);
@@ -11448,9 +11453,13 @@ const InterventionsView = ({
   const [showFilters, setShowFilters] = useState(false);
   const [expandedIntervention, setExpandedIntervention] = useState(null);
   
-  // ✅ NOUVEAUX ÉTATS pour le modal de fichiers
+  // États pour le modal de fichiers
   const [showFileModal, setShowFileModal] = useState(false);
   const [selectedInterventionForFiles, setSelectedInterventionForFiles] = useState(null);
+
+  // ✅ NOUVEAUX ÉTATS pour les commentaires
+  const [showCommentsModal, setShowCommentsModal] = useState(false);
+  const [selectedInterventionForComments, setSelectedInterventionForComments] = useState(null);
 
   const sitesByBuilding = {
     'Bâtiment AD': [
@@ -11508,7 +11517,7 @@ const InterventionsView = ({
   };
   
   const getLieuLabel = (lieuValue) => {
-    for (const [batiment, sites] of Object.entries(sitesByBuilding)) {
+    for (const [, sites] of Object.entries(sitesByBuilding)) {
       const site = sites.find(s => s.value === lieuValue);
       if (site) return site.label;
     }
@@ -11573,7 +11582,6 @@ const InterventionsView = ({
     const newStatus = intervention.statut === 'planifiee' ? 'en_cours' : 'en_attente_validation';
     console.log('🔄 Changement de statut:', intervention.statut, '→', newStatus);
     
-    // ✅ CORRECTION : Pour un technicien qui veut terminer, on ouvre le modal avec le flag
     if (currentUser.role !== 'admin' && 
         intervention.statut === 'en_cours' && 
         newStatus === 'en_attente_validation') {
@@ -11586,7 +11594,6 @@ const InterventionsView = ({
       return;
     }
     
-    // Pour les autres changements de statut (planifiée → en cours)
     const result = await onUpdate(intervention._id, { statut: newStatus });
     
     console.log('📦 Résultat de la mise à jour:', result);
@@ -11595,14 +11602,9 @@ const InterventionsView = ({
       alert(result.message || 'Une erreur est survenue');
     } else {
       console.log('✅ Intervention mise à jour:', result.data);
-      console.log('📅 Dates effectives:', {
-        dateDebutEffectif: result.data?.dateDebutEffectif,
-        dateFinEffective: result.data?.dateFinEffective
-      });
     }
   };
 
-  // ✅ CORRIGÉ : Validation par l'admin - UTILISE onValider
   const handleValidateIntervention = async (intervention) => {
     if (currentUser.role !== 'admin') return;
     
@@ -11610,9 +11612,7 @@ const InterventionsView = ({
       setLoading(true);
       try {
         console.log('🔄 Début validation frontend - Intervention ID:', intervention._id);
-        console.log('🔄 Statut actuel de l\'intervention:', intervention.statut);
         
-        // ✅ UTILISATION DE onValider PASSÉ DEPUIS APP.JSX
         const result = await onValider(intervention._id);
         
         console.log('✅ Réponse validation:', result);
@@ -11620,13 +11620,11 @@ const InterventionsView = ({
         if (result && result.success) {
           console.log('✅ Intervention validée avec succès');
           
-          // Recharger les données pour mettre à jour l'interface
           if (onReloadIntervention) {
             console.log('🔄 Rechargement des données...');
             await onReloadIntervention(intervention._id);
           }
           
-          // Afficher un message de succès
           alert('Intervention validée avec succès !');
           
         } else {
@@ -11637,7 +11635,6 @@ const InterventionsView = ({
       } catch (error) {
         console.error('❌ Erreur validation frontend complète:', error);
         
-        // Gestion fine des erreurs
         if (error.code === 'ERR_NETWORK') {
           alert('Erreur réseau - Vérifiez votre connexion');
         } else if (error.response?.status === 400) {
@@ -11658,7 +11655,6 @@ const InterventionsView = ({
     setShowFilesModal(true);
   };
 
-  // ✅ NOUVELLES FONCTIONS pour le modal de fichiers
   const handleShowFileModal = (intervention) => {
     setSelectedInterventionForFiles(intervention);
     setShowFileModal(true);
@@ -11669,24 +11665,58 @@ const InterventionsView = ({
     setSelectedInterventionForFiles(null);
   };
 
-  // ✅ NOUVELLE FONCTION : Gérer l'upload/suppression de fichiers
-  const handleFileUploaded = async (interventionId) => {
+  // ✅ FONCTIONS pour les commentaires - utilise les props passées par App.jsx
+  const handleShowComments = (intervention) => {
+    setSelectedInterventionForComments(intervention);
+    setShowCommentsModal(true);
+  };
+
+  const handleCloseCommentsModal = () => {
+    setShowCommentsModal(false);
+    setSelectedInterventionForComments(null);
+  };
+
+  const handleAddComment = async (interventionId, texte) => {
     try {
-      console.log('🔄 Rechargement après opération sur fichiers pour intervention:', interventionId);
+      // Utiliser la fonction passée en prop depuis App.jsx
+      const result = await onAddComment(interventionId, texte);
       
-      // Utiliser la fonction passée depuis App.jsx
-      if (onFileUploaded) {
-        await onFileUploaded(interventionId);
+      if (result.success) {
+        // Recharger l'intervention pour avoir les données à jour
+        if (onReloadIntervention) {
+          await onReloadIntervention(interventionId);
+        }
+        // Mettre à jour l'intervention sélectionnée dans le modal
+        const updatedIntervention = result.data;
+        setSelectedInterventionForComments(updatedIntervention);
       }
       
-      // Recharger également l'intervention spécifique
-      if (onReloadIntervention) {
-        await onReloadIntervention(interventionId);
+      return result;
+    } catch (error) {
+      console.error('Erreur lors de l\'ajout du commentaire:', error);
+      throw error;
+    }
+  };
+
+  const handleDeleteComment = async (interventionId, commentId) => {
+    try {
+      // Utiliser la fonction passée en prop depuis App.jsx
+      const result = await onDeleteComment(interventionId, commentId);
+      
+      if (result.success) {
+        // Recharger l'intervention pour avoir les données à jour
+        if (onReloadIntervention) {
+          await onReloadIntervention(interventionId);
+        }
+        // Mettre à jour l'intervention sélectionnée dans le modal
+        const updatedIntervention = result.data;
+        setSelectedInterventionForComments(updatedIntervention);
       }
       
-      console.log('✅ Fichiers mis à jour pour l\'intervention:', interventionId);
-    } catch (err) {
-      console.error('❌ Erreur lors du rechargement après opération sur fichiers:', err);
+      return result;
+    } catch (error) {
+      console.error('Erreur lors de la suppression du commentaire:', error);
+      throw error;
     }
   };
 
@@ -11768,7 +11798,6 @@ const InterventionsView = ({
 
   const hasActiveFilters = filterDate || filterStatut || filterLieu || searchTerm;
 
-  // Variables pour les permissions
   const isAdmin = currentUser?.role === 'admin';
   const isTechnician = currentUser?.role !== 'admin';
 
@@ -11956,6 +11985,7 @@ const InterventionsView = ({
         {filteredInterventions.map(intervention => {
           const tech = intervention.technicien;
           const hasFiles = intervention.fichiers && intervention.fichiers.length > 0;
+          const hasComments = intervention.commentaires && intervention.commentaires.length > 0;
           const statusConfig = getStatusConfig(intervention.statut);
           const isExpanded = expandedIntervention === intervention._id;
           const isAssignedTechnician = intervention.technicien?._id === currentUser._id;
@@ -11998,12 +12028,17 @@ const InterventionsView = ({
                           {intervention.fichiers.length} fichier(s)
                         </span>
                       )}
+                      {hasComments && (
+                        <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-700">
+                          <MessageSquare size={12} />
+                          {intervention.commentaires.length} commentaire(s)
+                        </span>
+                      )}
                       {intervention.dateDebutEffectif && intervention.dateFinEffective && (
                         <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 border border-purple-200 dark:border-purple-700">
                           ⏱️ {formatDuree(intervention.dateDebutEffectif, intervention.dateFinEffective)}
                         </span>
                       )}
-                      {/* ✅ NOUVEAU : Badge En attente de validation */}
                       {intervention.statut === 'en_attente_validation' && (
                         <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 border border-orange-200 dark:border-orange-700 animate-pulse">
                           <AlertCircle size={12} />
@@ -12026,7 +12061,7 @@ const InterventionsView = ({
                         </button>
                       )}
 
-                      {/* ✅ NOUVEAU : Bouton de validation pour l'admin */}
+                      {/* Bouton de validation pour l'admin */}
                       {isAdmin && intervention.statut === 'en_attente_validation' && (
                         <button
                           onClick={(e) => { e.stopPropagation(); handleValidateIntervention(intervention); }}
@@ -12037,6 +12072,20 @@ const InterventionsView = ({
                         </button>
                       )}
 
+                      {/* ✅ NOUVEAU : Bouton commentaires avec badge */}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); handleShowComments(intervention); }}
+                        className="p-2 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-xl transition-all duration-200 hover:scale-110 relative"
+                        title="Commentaires"
+                      >
+                        <MessageSquare size={18} />
+                        {hasComments && (
+                          <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                            {intervention.commentaires.length}
+                          </span>
+                        )}
+                      </button>
+
                       {/* Bouton gestion des fichiers */}
                       <button
                         onClick={(e) => { e.stopPropagation(); handleShowFileModal(intervention); }}
@@ -12046,7 +12095,7 @@ const InterventionsView = ({
                         <Paperclip size={18} />
                       </button>
 
-                      {/* Boutons Admin uniquement (masqués pour les interventions en attente) */}
+                      {/* Boutons Admin uniquement */}
                       {isAdmin && intervention.statut !== 'en_attente_validation' && (
                         <>
                           <button
@@ -12375,14 +12424,26 @@ const InterventionsView = ({
       )}
 
       {/* Modal de gestion des fichiers */}
-{showFileModal && selectedInterventionForFiles && (
-  <FileUploadModal
-    intervention={selectedInterventionForFiles}
-    onClose={handleCloseFileModal}
-    onFileUploaded={onReloadIntervention} // ✅ SIMPLEMENT PASSER LA FONCTION EXISTANTE
-    currentUser={currentUser}
-  />
-)}
+      {showFileModal && selectedInterventionForFiles && (
+        <FileUploadModal
+          intervention={selectedInterventionForFiles}
+          onClose={handleCloseFileModal}
+          onFileUploaded={onReloadIntervention}
+          currentUser={currentUser}
+        />
+      )}
+
+      {/* ✅ NOUVEAU : Modal de commentaires */}
+      {showCommentsModal && selectedInterventionForComments && (
+        <CommentsModal
+          intervention={selectedInterventionForComments}
+          currentUser={currentUser}
+          onClose={handleCloseCommentsModal}
+          onAddComment={handleAddComment}
+          onDeleteComment={handleDeleteComment}
+          loading={loading}
+        />
+      )}
     </div>
   );
 };

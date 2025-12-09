@@ -49,11 +49,7 @@
 
 import axios from 'axios';
 
-// ⬇️ REMPLACEZ CETTE LIGNE ⬇️
-// AVANT : 
-// const API_URL = 'http://localhost:5000/api';
-
-// APRÈS :
+// API_URL
 const API_URL = process.env.REACT_APP_API_URL ? `${process.env.REACT_APP_API_URL}/api` : 'http://localhost:5000/api';
 
 // Créer une instance axios
